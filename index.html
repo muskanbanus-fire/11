@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Calculate mutual fund market value, drawing power, NAV movement and portfolio shortfall."
+  >
+
+  <title>Fund Shortfall Calculator</title>
+
+  <link
+    rel="stylesheet"
+    href="/styles.css"
+  >
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="page-container header-content">
+      <div>
+        <p class="eyebrow">
+          PORTFOLIO ANALYSIS
+        </p>
+
+        <h1>
+          Fund Shortfall Calculator
+        </h1>
+
+        <p class="header-description">
+          Paste your holding statement or upload a screenshot
+          to check the latest market value, drawing power and
+          account status.
+        </p>
+      </div>
+
+      <div
+        class="data-status"
+        id="data-status"
+      >
+        <span class="status-dot"></span>
+        Latest daily NAV
+      </div>
+    </div>
+  </header>
+
+  <main class="page-container">
+    <section
+      class="calculator-card"
+      aria-labelledby="holding-input-title"
+    >
+      <div class="section-heading">
+        <div>
+          <p class="step-label">
+            STEP 1
+          </p>
+
+          <h2 id="holding-input-title">
+            Add holding statement
+          </h2>
+
+          <p>
+            Choose one input method. You do not need to enter
+            individual funds manually.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="input-tabs"
+        role="tablist"
+        aria-label="Holding input method"
+      >
+        <button
+          type="button"
+          class="input-tab active"
+          id="paste-tab"
+          data-input-mode="paste"
+          role="tab"
+          aria-selected="true"
+          aria-controls="paste-panel"
+        >
+          Paste data
+        </button>
+
+        <button
+          type="button"
+          class="input-tab"
+          id="upload-tab"
+          data-input-mode="upload"
+          role="tab"
+          aria-selected="false"
+          aria-controls="upload-panel"
+        >
+          Upload screenshot
+        </button>
+      </div>
+
+      <form id="calculator-form">
+        <div
+          id="paste-panel"
+          class="input-panel"
+          role="tabpanel"
+          aria-labelledby="paste-tab"
+        >
+          <label for="holding-text">
+            Copy and paste the complete holding table
+          </label>
+
+          <textarea
+            id="holding-text"
+            name="holdingText"
+            rows="12"
+            placeholder="Paste the complete holding statement here, including its headings..."
+          ></textarea>
+
+          <p class="field-help">
+            Both supported holding-statement formats will be
+            converted into one unified structure.
+          </p>
+        </div>
+
+        <div
+          id="upload-panel"
+          class="input-panel hidden"
+          role="tabpanel"
+          aria-labelledby="upload-tab"
+        >
+          <label
+            class="upload-area"
+            for="holding-image"
+            id="upload-area"
+          >
+            <input
+              type="file"
+              id="holding-image"
+              name="holdingImage"
+              accept="image/png,image/jpeg,image/webp"
+              hidden
+            >
+
+            <span class="upload-icon">
+              ↑
+            </span>
+
+            <strong>
+              Select holding-statement screenshot
+            </strong>
+
+            <span>
+              PNG, JPG or WEBP — maximum 4 MB
+            </span>
+          </label>
+
+          <div
+            id="image-preview-container"
+            class="image-preview-container hidden"
+          >
+            <img
+              id="image-preview"
+              alt="Selected holding statement preview"
+            >
+
+            <div>
+              <p id="image-name"></p>
+
+              <button
+                type="button"
+                id="remove-image"
+                class="text-button"
+              >
+                Remove screenshot
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="account-input-section">
+          <div class="section-heading">
+            <div>
+              <p class="step-label">
+                STEP 2
+              </p>
+
+              <h2>
+                Add loan information
+              </h2>
+
+              <p>
+                Exposure will be calculated as POS plus overdue
+                charges.
+              </p>
+            </div>
+          </div>
+
+          <div class="account-input-grid">
+            <div class="form-field">
+              <label for="pos">
+                POS
+              </label>
+
+              <div class="currency-input">
+                <span>₹</span>
+
+                <input
+                  type="number"
+                  id="pos"
+                  name="pos"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="overdue-charges">
+                Overdue charges
+              </label>
+
+              <div class="currency-input">
+                <span>₹</span>
+
+                <input
+                  type="number"
+                  id="overdue-charges"
+                  name="overdueCharges"
+                  min="0"
+                  step="0.01"
+                  value="0"
+                  placeholder="0.00"
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="form-message"
+          class="form-message hidden"
+          role="alert"
+        ></div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            id="reset-button"
+            class="secondary-button"
+          >
+            Reset
+          </button>
+
+          <button
+            type="submit"
+            id="calculate-button"
+            class="primary-button"
+          >
+            Calculate portfolio
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section
+      id="loading-section"
+      class="loading-section hidden"
+      aria-live="polite"
+    >
+      <div class="spinner"></div>
+
+      <div>
+        <strong>
+          Analysing portfolio
+        </strong>
+
+        <p id="loading-message">
+          Reading the holding statement…
+        </p>
+      </div>
+    </section>
+
+    <section
+      id="results-section"
+      class="results-section hidden"
+      aria-labelledby="account-result-title"
+    >
+      <div
+        id="account-status-card"
+        class="account-status-card"
+      >
+        <div>
+          <p class="step-label">
+            CUSTOMER ACCOUNT STATUS
+          </p>
+
+          <h2 id="account-result-title">
+            Portfolio result
+          </h2>
+        </div>
+
+        <div
+          id="account-status"
+          class="account-status"
+        >
+          —
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card">
+          <span>
+            Current Market Value
+          </span>
+
+          <strong id="total-market-value">
+            ₹0.00
+          </strong>
+        </article>
+
+        <article class="summary-card">
+          <span>
+            Gross Drawing Power
+          </span>
+
+          <strong id="total-gross-dp">
+            ₹0.00
+          </strong>
+        </article>
+
+        <article class="summary-card">
+          <span>
+            Risk Drawing Power
+          </span>
+
+          <strong id="total-risk-dp">
+            ₹0.00
+          </strong>
+        </article>
+
+        <article class="summary-card">
+          <span>
+            Exposure
+          </span>
+
+          <strong id="total-exposure">
+            ₹0.00
+          </strong>
+        </article>
+      </div>
+
+      <div class="limit-result-card">
+        <div>
+          <span id="limit-result-label">
+            Available Limit
+          </span>
+
+          <strong id="limit-result-value">
+            ₹0.00
+          </strong>
+        </div>
+
+        <div class="loan-breakdown">
+          <p>
+            POS:
+            <strong id="result-pos">
+              ₹0.00
+            </strong>
+          </p>
+
+          <p>
+            Overdue:
+            <strong id="result-overdue">
+              ₹0.00
+            </strong>
+          </p>
+        </div>
+      </div>
+
+      <div
+        id="warnings-card"
+        class="warnings-card hidden"
+      >
+        <h3>
+          Items requiring review
+        </h3>
+
+        <ul id="warnings-list"></ul>
+      </div>
+
+      <section class="fund-results-card">
+        <div class="fund-results-header">
+          <div>
+            <p class="step-label">
+              FUND-WISE ANALYSIS
+            </p>
+
+            <h2>
+              NAV and value movement
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            id="download-button"
+            class="secondary-button"
+          >
+            Download report
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Scrip Name</th>
+                <th>ISIN</th>
+                <th>Units</th>
+                <th>Previous NAV</th>
+                <th>Current NAV</th>
+                <th>Market Value</th>
+                <th>Internal LTV</th>
+                <th>Gross DP</th>
+                <th>Risk LTV</th>
+                <th>Risk DP</th>
+                <th>Value Change</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody id="fund-results-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page-container">
+      NAV values are based on the latest available daily
+      mutual-fund data.
+    </div>
+  </footer>
+
+  <script
+    src="/app.js"
+    defer
+  ></script>
+</body>
+</html>
